@@ -16,12 +16,18 @@ class String(LispType):
     pass
 ###
 
-def quoteFunc(*args):
-    print("args: {}".format(args))
-    if len(args) == 1:
-        return "'{}".format(args[0])
+# convert expression to postfix lisp
+def lispString(expr):
+    if isinstance(expr, list):
+        return '(' + ' '.join(map(lispString, expr)) + ')'
     else:
-        return "'{}".format(args[1])
+        return str(expr)
+
+def quoteFunc(*args):
+    if len(args) == 1:
+        return "'{}".format(lispString(args[0]))
+    else:
+        return "'{}".format(lispString(args[1]))
 
 functions = {
     '+': op.add,
@@ -85,14 +91,12 @@ def eval(program, funcs=functions):
             return funcs[program.value]
         except KeyError:
             raise TypeError("Function: {} not in language spec".format(program))
-    elif program[0] == "'":
-        func = eval(program[-1], funcs)
-        args = [arg for arg in program[:-1]]
-        print("fn: {}, args: {}", func, args)
-        return func(*args)
     else:
         func = eval(program[-1], funcs)
-        args = [eval(arg, funcs) for arg in program[:-1]]
+        if func == quoteFunc:
+            args = [arg for arg in program[:-1]]
+        else:
+            args = [eval(arg, funcs) for arg in program[:-1]]
         return func(*args)
 ###
 

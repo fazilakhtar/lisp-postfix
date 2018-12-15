@@ -57,6 +57,11 @@ class ListTests(unittest.TestCase):
         self.assertEqual(eval(parse(tokenize('(1 1 eq?)'))), True)
         self.assertEqual(eval(parse(tokenize('(1 2 eq?)'))), False)
 
+    def test_quote(self):
+        self.assertEqual(eval(parse(tokenize('(a quote)'))), "'a")
+        self.assertEqual(eval(parse(tokenize('((1 2 +) quote)'))), "'(1 2 +)")
+        self.assertEqual(eval(parse(tokenize("('(1 2 3) quote)"))), "'(1 2 3)")
+
 
 if __name__ == '__main__':
     unittest.main()
