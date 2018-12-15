@@ -24,10 +24,29 @@ def lispString(expr):
         return str(expr)
 
 def quoteFunc(*args):
-    if len(args) == 1:
-        return "'{}".format(lispString(args[0]))
+    # print("args: ", args)
+    return "{}'".format(lispString(args[0]))
+
+def consFunc(*args):
+    # print("args: {}", args)
+    (x, y) = args
+    if isinstance(x, list):
+        if isinstance(y, list):
+            return x + y
+        else:
+            return x + [y]
     else:
-        return "'{}".format(lispString(args[1]))
+        if isinstance(y, list):
+            return [x] + y
+        else:
+            return [x] + [y]
+
+def atomFunc(*args):
+    # print("args: ", args)
+    if args[-1] == "'":
+        return False
+    else:
+        return not isinstance(args[0], Symbol)
 
 functions = {
     '+': op.add,
@@ -36,6 +55,13 @@ functions = {
     '/': op.truediv,
     'eq?': op.is_,
     'quote': quoteFunc,
+    'cons': consFunc,
+    # 'car': ,
+    # 'cdr': ,
+    # 'atom?': ,
+    # 'define': ,
+    # 'lambda': ,
+    # 'cond': ,
 }
 def atom(token):
     try:
@@ -94,6 +120,8 @@ def eval(program, funcs=functions):
     else:
         func = eval(program[-1], funcs)
         if func == quoteFunc:
+            args = [arg for arg in program[:-1]]
+        elif func == consFunc:
             args = [arg for arg in program[:-1]]
         else:
             args = [eval(arg, funcs) for arg in program[:-1]]

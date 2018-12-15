@@ -58,10 +58,14 @@ class ListTests(unittest.TestCase):
         self.assertEqual(eval(parse(tokenize('(1 2 eq?)'))), False)
 
     def test_quote(self):
-        self.assertEqual(eval(parse(tokenize('(a quote)'))), "'a")
-        self.assertEqual(eval(parse(tokenize('((1 2 +) quote)'))), "'(1 2 +)")
-        self.assertEqual(eval(parse(tokenize("('(1 2 3) quote)"))), "'(1 2 3)")
+        self.assertEqual(eval(parse(tokenize('(a quote)'))), "a'")
+        self.assertEqual(eval(parse(tokenize('((1 2 +) quote)'))), "(1 2 +)'")
+        self.assertEqual(eval(parse(tokenize("((1 2 3)'' quote)"))), "(1 2 3)'")
 
+    def test_cons(self):
+        self.assertEqual(eval(parse(tokenize('(3 4 cons)'))), [3, 4])
+        self.assertEqual(eval(parse(tokenize('((3 4) 10 cons)'))), [3, 4, 10])
+        self.assertEqual(eval(parse(tokenize('(10 (3 4) cons)'))), [10, 3, 4])
 
 if __name__ == '__main__':
     unittest.main()
