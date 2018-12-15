@@ -55,9 +55,28 @@ def parse(tokens):
         raise SyntaxError("Unexpected ')' in tokenized list")
     else:
         return atom(token)
-
 ###
 
+
+###
+# evaluate the parsed lisp program
+def eval(program, funcs=functions):
+    if isinstance(program, int):
+        return program
+    elif isinstance(program, float):
+        return program
+    elif isinstance(program, String):
+        return program
+    elif isinstance(program, Symbol):
+        try:
+            return funcs[program.value]
+        except KeyError:
+            raise TypeError("Function: {} not in language spec".format(program))
+    else:
+        func = eval(program[-1], funcs)
+        args = [eval(arg, funcs) for arg in program[:-1]]
+        return func(*args)
+###
 
 def main():
     while True:
@@ -65,7 +84,8 @@ def main():
         input_string_parsed = parse(tokenize(input_string))
         if input_string_parsed is not None:
             print("parsed: {}".format(input_string_parsed))
-        
+            value = eval(input_string_parsed)
+            print("{0} #=> {1}".format(input_string, value))
 
 if __name__ == '__main__':
     main()
