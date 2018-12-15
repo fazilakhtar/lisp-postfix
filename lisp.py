@@ -16,11 +16,20 @@ class String(LispType):
     pass
 ###
 
+def quoteFunc(*args):
+    print("args: {}".format(args))
+    if len(args) == 1:
+        return "'{}".format(args[0])
+    else:
+        return "'{}".format(args[1])
+
 functions = {
     '+': op.add,
     '-': op.sub,
     '*': op.mul,
     '/': op.truediv,
+    'eq?': op.is_,
+    'quote': quoteFunc,
 }
 def atom(token):
     try:
@@ -32,7 +41,10 @@ def atom(token):
             if token in functions:
                 return Symbol(token)
             else:
-                return String(token)
+                if token == "'":
+                    return token
+                else:
+                    return String(token)
 
 ###
 # Tokenize and parse the lisp input
@@ -61,6 +73,7 @@ def parse(tokens):
 ###
 # evaluate the parsed lisp program
 def eval(program, funcs=functions):
+    # print("program: {}".format(program))
     if isinstance(program, int):
         return program
     elif isinstance(program, float):
@@ -72,6 +85,11 @@ def eval(program, funcs=functions):
             return funcs[program.value]
         except KeyError:
             raise TypeError("Function: {} not in language spec".format(program))
+    elif program[0] == "'":
+        func = eval(program[-1], funcs)
+        args = [arg for arg in program[:-1]]
+        print("fn: {}, args: {}", func, args)
+        return func(*args)
     else:
         func = eval(program[-1], funcs)
         args = [eval(arg, funcs) for arg in program[:-1]]
@@ -81,9 +99,10 @@ def eval(program, funcs=functions):
 def main():
     while True:
         input_string = input('>>> ')
+        print("tokenized: ", tokenize(input_string))
         input_string_parsed = parse(tokenize(input_string))
         if input_string_parsed is not None:
-            print("parsed: {}".format(input_string_parsed))
+            # print("parsed: {}".format(input_string_parsed))
             value = eval(input_string_parsed)
             print("{0} #=> {1}".format(input_string, value))
 

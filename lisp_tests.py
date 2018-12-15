@@ -53,6 +53,10 @@ class ListTests(unittest.TestCase):
         with self.assertRaises(TypeError):
             eval(parse(tokenize('(2 2 %)')))
 
+    def test_eq(self):
+        self.assertEqual(eval(parse(tokenize('(1 1 eq?)'))), True)
+        self.assertEqual(eval(parse(tokenize('(1 2 eq?)'))), False)
+
 
 if __name__ == '__main__':
     unittest.main()
