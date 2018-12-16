@@ -1,17 +1,5 @@
 import operator as op
 
-###
-# Custom type for Lisp
-class Symbol(str):
-    pass
-###
-
-# convert expression to postfix lisp
-def lispString(expr):
-    if isinstance(expr, list):
-        return '(' + ' '.join(map(lispString, expr)) + ')'
-    else:
-        return str(expr)
 
 def consFunc(*args):
     # print("args: ", args)
@@ -34,7 +22,6 @@ def atomFunc(*args):
             return False
     else:
         return not isinstance(args[0], Symbol)
-
 functions = {
     '+': op.add,
     '-': op.sub,
@@ -50,6 +37,30 @@ functions = {
     # 'lambda': ,
     # 'cond': ,
 }
+
+###
+# Custom type for Lisp
+class Symbol(str):
+    pass
+
+class Lambda:
+    def __init__(self, args, expression, funcs):
+        self.args = args
+        self.expression = expression
+        self.funcs = funcs
+
+    def __call__(self, *expression):
+        functions.update(dict(zip(self.args, expression)))
+        return eval(self.expression, functions)
+###
+
+# convert expression to postfix lisp
+def lispString(expr):
+    if isinstance(expr, list):
+        return '(' + ' '.join(map(lispString, expr)) + ')'
+    else:
+        return str(expr)
+
 def atom(token):
     try:
         return int(token)
@@ -101,7 +112,7 @@ def eval(program, funcs=functions):
     elif isinstance(program, float):
         return program
     elif isinstance(program, Symbol):
-        return funcs[program]  
+        return funcs[program]
     elif not isinstance(program, list):
         return program
     elif program[0] == 'quote':
@@ -111,6 +122,10 @@ def eval(program, funcs=functions):
         value = eval(program[2], funcs)
         funcs[name] = value
         # print(funcs)
+    elif program[0] == 'lambda':
+        args = program[1]
+        expression = program[2]
+        return Lambda(args, expression, funcs)
     else:
         func = eval(program[0], funcs)
         args = [eval(arg, funcs) for arg in program[1:]]

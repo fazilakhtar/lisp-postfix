@@ -102,6 +102,12 @@ class ListTests(unittest.TestCase):
         self.assertEqual(eval(parse(tokenize('(a 5 +)'))), 10)
         self.assertEqual(eval(parse(tokenize('(a 10 *)'))), 50)
 
+    def test_lambda(self):
+        eval(parse(tokenize('(((x x *) x lambda) square define)')))
+        self.assertEqual(eval(parse(tokenize('(5 square)'))), 25)
+        self.assertEqual(eval(parse(tokenize('(0 square)'))), 0)
+        self.assertEqual(eval(parse(tokenize('(5.5 square)'))), 30.25)
+
 
 if __name__ == '__main__':
     unittest.main()
