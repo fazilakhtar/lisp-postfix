@@ -2,7 +2,6 @@ import operator as op
 
 
 def consFunc(*args):
-    # print("args: ", args)
     (y, x) = args
     if isinstance(x, list):
         if isinstance(y, list):
@@ -16,30 +15,26 @@ def consFunc(*args):
             return [x] + [y]
 
 def atomFunc(*args):
-    # print("args: ", args)
     if isinstance(args[0], str):
         if "'" in args[0]:
             return False
     else:
         return not isinstance(args[0], Symbol)
+
 functions = {
     '+': op.add,
     '-': op.sub,
     '*': op.mul,
     '/': op.truediv,
     'eq?': op.is_,
-    # 'quote': ,
     'cons': consFunc,
     'car': lambda x : x.pop(),
     'cdr': lambda x : x[:-1],
     'atom?': atomFunc,
-    # 'define': ,
-    # 'lambda': ,
-    # 'cond': ,
 }
 
 ###
-# Custom type for Lisp
+# Custom types for Lisp
 class Symbol(str):
     pass
 
@@ -106,7 +101,6 @@ def parse(tokens):
 ###
 # evaluate the parsed lisp program
 def eval(program, funcs=functions):
-    # print("program: {}".format(program))
     if isinstance(program, int):
         return program
     elif isinstance(program, float):
@@ -117,7 +111,6 @@ def eval(program, funcs=functions):
         name = program[1]
         value = eval(program[2], funcs)
         funcs[name] = value
-        # print(funcs)
     elif program[0] == 'lambda':
         args = program[1]
         expression = program[2]
@@ -128,7 +121,6 @@ def eval(program, funcs=functions):
             if clause[-1] == 'else':
                 return clause[0]
             else:
-                # evaled = eval(clause[1], funcs)
                 if eval(clause[1], funcs):
                     return clause[0]
     elif isinstance(program, Symbol):
@@ -144,13 +136,11 @@ def eval(program, funcs=functions):
 def main():
     while True:
         input_string = input('>>> ')
-        print("tokenized: ", tokenize(input_string))
         input_string_parsed = parse(tokenize(input_string))
-        print("parsed: {}".format(input_string_parsed))
         if input_string_parsed is not None:
-            # print("parsed: {}".format(input_string_parsed))
             value = eval(input_string_parsed)
             print("{0} #=> {1}".format(input_string, value))
+
 
 if __name__ == '__main__':
     main()
