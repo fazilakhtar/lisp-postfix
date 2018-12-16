@@ -1,18 +1,8 @@
 import operator as op
 
 ###
-# Custom types for Lisp
-class LispType(object):
-    def __init__(self, value):
-        self.value = value
-
-    def __repr__(self):
-        return self.value
-
-class Symbol(LispType):
-    pass
-
-class String(LispType):
+# Custom type for Lisp
+class Symbol(str):
     pass
 ###
 
@@ -23,13 +13,13 @@ def lispString(expr):
     else:
         return str(expr)
 
-def quoteFunc(*args):
-    # print("args: ", args)
-    return "{}'".format(lispString(args[0]))
+# def quoteFunc(*args):
+#     # print("args: ", args)
+#     return "{}'".format(lispString(args[1]))
 
 def consFunc(*args):
-    # print("args: {}", args)
-    (x, y) = args
+    # print("args: ", args)
+    (y, x) = args
     if isinstance(x, list):
         if isinstance(y, list):
             return x + y
@@ -43,8 +33,9 @@ def consFunc(*args):
 
 def atomFunc(*args):
     # print("args: ", args)
-    if args[-1] == "'":
-        return False
+    if isinstance(args[0], str):
+        if "'" in args[0]:
+            return False
     else:
         return not isinstance(args[0], Symbol)
 
@@ -54,11 +45,11 @@ functions = {
     '*': op.mul,
     '/': op.truediv,
     'eq?': op.is_,
-    'quote': quoteFunc,
+    # 'quote': ,
     'cons': consFunc,
-    # 'car': ,
-    # 'cdr': ,
-    # 'atom?': ,
+    'car': lambda x : x.pop(),
+    'cdr': lambda x : x[:-1],
+    'atom?': atomFunc,
     # 'define': ,
     # 'lambda': ,
     # 'cond': ,
@@ -70,33 +61,34 @@ def atom(token):
         try:
             return float(token)
         except ValueError:
-            if token in functions:
-                return Symbol(token)
-            else:
-                if token == "'":
-                    return token
-                else:
-                    return String(token)
+            return Symbol(token)
+
 
 ###
 # Tokenize and parse the lisp input
 def tokenize(string):
     if len(string) == 0:
         raise SyntaxError("input is empty, terminate")
-    return string.replace('(', ' ( ').replace(')', ' ) ').split()
+    return string.replace('(', ' ( ').replace(')', ' ) ').replace("'", " ' ").split()
 
 def parse(tokens):
-    token = tokens.pop(0)
-
-    if token == '(':
+    token = tokens.pop()
+    
+    if token == ')':
         token_list = []
-        while tokens[0] != ')':
+        while tokens[-1] != '(':
             token_list.append(parse(tokens))
-        tokens.pop(0)
+        tokens.pop()
 
         return token_list
-    elif token == ')':
-        raise SyntaxError("Unexpected ')' in tokenized list")
+    elif token == "'":
+        token_list = []
+        if len(tokens) >= 1:
+            while tokens[-1] != "(":
+                token_list.append(parse(tokens))
+            return lispString(lispString(token_list[0])) + token
+    elif token == '(':
+        raise SyntaxError("Unexpected '(' in tokenized list")
     else:
         return atom(token)
 ###
@@ -110,21 +102,20 @@ def eval(program, funcs=functions):
         return program
     elif isinstance(program, float):
         return program
-    elif isinstance(program, String):
-        return program
     elif isinstance(program, Symbol):
-        try:
-            return funcs[program.value]
-        except KeyError:
-            raise TypeError("Function: {} not in language spec".format(program))
+        return funcs[program]  
+    elif not isinstance(program, list):
+        return program
+    elif program[0] == 'quote':
+        return lispString(program[1])
+    elif program[0] == 'define':
+        name = program[1]
+        value = eval(program[2], funcs)
+        funcs[name] = value
+        # print(funcs)
     else:
-        func = eval(program[-1], funcs)
-        if func == quoteFunc:
-            args = [arg for arg in program[:-1]]
-        elif func == consFunc:
-            args = [arg for arg in program[:-1]]
-        else:
-            args = [eval(arg, funcs) for arg in program[:-1]]
+        func = eval(program[0], funcs)
+        args = [eval(arg, funcs) for arg in program[1:]]
         return func(*args)
 ###
 
@@ -133,6 +124,7 @@ def main():
         input_string = input('>>> ')
         print("tokenized: ", tokenize(input_string))
         input_string_parsed = parse(tokenize(input_string))
+        print("parsed: {}".format(input_string_parsed))
         if input_string_parsed is not None:
             # print("parsed: {}".format(input_string_parsed))
             value = eval(input_string_parsed)
