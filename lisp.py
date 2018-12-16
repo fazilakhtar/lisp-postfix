@@ -13,10 +13,6 @@ def lispString(expr):
     else:
         return str(expr)
 
-# def quoteFunc(*args):
-#     # print("args: ", args)
-#     return "{}'".format(lispString(args[1]))
-
 def consFunc(*args):
     # print("args: ", args)
     (y, x) = args
@@ -69,7 +65,9 @@ def atom(token):
 def tokenize(string):
     if len(string) == 0:
         raise SyntaxError("input is empty, terminate")
-    return string.replace('(', ' ( ').replace(')', ' ) ').replace("'", " ' ").split()
+    string = string.replace('(', ' ( ').replace(')', ' ) ')
+    string = string.replace("'", " ' ").split()
+    return string
 
 def parse(tokens):
     token = tokens.pop()
