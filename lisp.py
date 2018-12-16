@@ -111,10 +111,6 @@ def eval(program, funcs=functions):
         return program
     elif isinstance(program, float):
         return program
-    elif isinstance(program, Symbol):
-        return funcs[program]
-    elif not isinstance(program, list):
-        return program
     elif program[0] == 'quote':
         return lispString(program[1])
     elif program[0] == 'define':
@@ -126,6 +122,19 @@ def eval(program, funcs=functions):
         args = program[1]
         expression = program[2]
         return Lambda(args, expression, funcs)
+    elif program[0] == 'cond':
+        clauses = program[1]
+        for clause in clauses[::-1]:
+            if clause[-1] == 'else':
+                return clause[0]
+            else:
+                # evaled = eval(clause[1], funcs)
+                if eval(clause[1], funcs):
+                    return clause[0]
+    elif isinstance(program, Symbol):
+        return funcs[program]
+    elif not isinstance(program, list):
+        return program
     else:
         func = eval(program[0], funcs)
         args = [eval(arg, funcs) for arg in program[1:]]

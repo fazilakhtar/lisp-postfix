@@ -108,6 +108,20 @@ class ListTests(unittest.TestCase):
         self.assertEqual(eval(parse(tokenize('(0 square)'))), 0)
         self.assertEqual(eval(parse(tokenize('(5.5 square)'))), 30.25)
 
+    def test_cond(self):
+        eval(parse(tokenize('(3 c define)')))
+        self.assertEqual(
+            eval(parse(tokenize('((((c 1 eq?) one) ((c 2 eq?) two) '\
+                '((c 3 eq?) three) (else no-idea)) cond)'))),
+            'three'
+        )
+        self.assertEqual(
+            eval(parse(tokenize('((((c 1 eq?) one) ((c 2 eq?) two) '\
+                '((c 6 eq?) three) (else no-idea)) cond)'))),
+            'no-idea'
+        )
+
+
 
 if __name__ == '__main__':
     unittest.main()
