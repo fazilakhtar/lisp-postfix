@@ -62,10 +62,10 @@ class ListTests(unittest.TestCase):
         )
 
     def test_quote(self):
-        self.assertEqual(eval(parse(tokenize("(a' quote)"))), "a'")
-        self.assertEqual(eval(parse(tokenize('((1 2 +) quote)'))), "(+ 2 1)")
-        self.assertEqual(eval(parse(tokenize("((1 2 3) quote)"))), "(3 2 1)")
-        self.assertEqual(eval(parse(tokenize("((1 2 3)' quote)"))), "(3 2 1)'")
+        self.assertEqual(eval(parse(tokenize("(a' quote)"))), "a''")
+        self.assertEqual(eval(parse(tokenize('((1 2 +) quote)'))), "(+ 2 1)'")
+        self.assertEqual(eval(parse(tokenize("((1 2 3) quote)"))), "(3 2 1)'")
+        # self.assertEqual(eval(parse(tokenize("((1 2 3)' quote)"))), "(3 2 1)'")
 
     def test_cons(self):
         self.assertEqual(eval(parse(tokenize('(3 4 cons)'))), [3, 4])
@@ -86,11 +86,14 @@ class ListTests(unittest.TestCase):
             eval(parse(tokenize('((3 (5 2 cons) cons) cdr)'))), 
             [3, 5]
         )
+        eval(parse(tokenize("((1 2 3)' sl define)")))
+        self.assertEqual(eval(parse(tokenize('(((sl cdr) cdr) cdr)'))), [])
+        self.assertEqual(eval(parse(tokenize('((sl cdr) cdr)'))), [3])
 
     def test_atom(self):
         self.assertEqual(eval(parse(tokenize('(3 atom?)'))), True)
         self.assertEqual(eval(parse(tokenize("(3' atom?)"))), False)
-        self.assertEqual(eval(parse(tokenize("((3 2 1)' atom?)"))), False)
+        self.assertEqual(eval(parse(tokenize("((3 2 1)' atom?)"))), True)
 
     def test_define(self):
         eval(parse(tokenize('(5 a define)')))
@@ -107,15 +110,36 @@ class ListTests(unittest.TestCase):
     def test_cond(self):
         eval(parse(tokenize('(3 c define)')))
         self.assertEqual(
-            eval(parse(tokenize('((((c 1 eq?) one) ((c 2 eq?) two) '\
-                '((c 3 eq?) three) (else no-idea)) cond)'))),
+            eval(parse(tokenize('(((else no-idea) ((c 3 eq?) three) '\
+                '((c 2 eq?) two) ((c 1 eq?) one)) cond)'))),
             'three'
         )
         self.assertEqual(
-            eval(parse(tokenize('((((c 1 eq?) one) ((c 2 eq?) two) '\
-                '((c 6 eq?) three) (else no-idea)) cond)'))),
+            eval(parse(tokenize('(((else no-idea) ((c 6 eq?) three) '\
+                '((c 2 eq?) two) ((c 1 eq?) one)) cond)'))),
             'no-idea'
         )
+
+    def test_fib(self):
+        # def fib(n):
+        #     if n<0:
+        #         raise
+        #     elif n==0:
+        #         return 0
+        #     elif n==1:
+        #         return 1
+        #     else:
+        #         return fib(n-1)+fib(n-2)
+        #
+        # Prefix Lisp
+        # (define fib (lambda n (cond ((0 (eq? n 0)) (1 (eq? n 1) (else ((+ (fib (- n 1)) (fib (- n 2))))))))))
+        #
+        # Postfix Lisp
+        # (((((else (((2 n -) fib) ((1 n -) fib) +)) ((1 n eq?) 1) ((0 n eq?) 0)) cond) n lambda) fib define)
+        eval(parse(tokenize('(((((else (((2 n -) fib) ((1 n -) fib) +)) ((1 n eq?) 1) ((0 n eq?) 0)) cond) n lambda) fib define)')))
+        self.assertEqual(eval(parse(tokenize('(0 fib)'))), 0)
+        self.assertEqual(eval(parse(tokenize('(19 fib)'))), 4181)
+        # self.assertEqual(eval(parse(tokenize('(20 fib)'))), 6765)
 
 
 

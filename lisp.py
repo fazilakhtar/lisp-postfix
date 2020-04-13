@@ -1,4 +1,5 @@
 import operator as op
+import copy
 
 
 def consFunc(*args):
@@ -38,6 +39,9 @@ functions = {
 class Symbol(str):
     pass
 
+class List(list):
+    pass
+
 class Lambda:
     def __init__(self, args, expression, funcs):
         self.args = args
@@ -45,16 +49,29 @@ class Lambda:
         self.funcs = funcs
 
     def __call__(self, *expression):
-        functions.update(dict(zip(self.args, expression)))
-        return eval(self.expression, functions)
+        # functions.update(dict(zip(self.args, expression)))
+        ## copy 'funcs' into a local state
+        local_funcs = copy.deepcopy(functions)
+        local_funcs.update(dict(zip(self.args, expression)))
+        return eval(self.expression, local_funcs)
 ###
 
 # convert expression to postfix lisp
-def lispString(expr):
+def lispStringUnchanged(expr):
     if isinstance(expr, list):
-        return '(' + ' '.join(map(lispString, expr)) + ')'
+        return '(' + ' '.join(map(lispStringUnchanged, expr)) + ')'
     else:
         return str(expr)
+
+def lispString(expr):
+    if isinstance(expr, list):
+        return List(expr)
+    else:
+        s = str(expr)
+        if s[-1] == "'":
+            return s
+        else:
+            return s + "'"
 
 def atom(token):
     try:
@@ -90,7 +107,7 @@ def parse(tokens):
         if len(tokens) >= 1:
             while tokens[-1] != "(":
                 token_list.append(parse(tokens))
-            return lispString(lispString(token_list[0])) + token
+            return lispString(token_list[0])
     elif token == '(':
         raise SyntaxError("Unexpected '(' in tokenized list")
     else:
@@ -101,12 +118,14 @@ def parse(tokens):
 ###
 # evaluate the parsed lisp program
 def eval(program, funcs=functions):
+    # print("in-eval: ", program)
+    # print("funcs: ", funcs)
     if isinstance(program, int):
         return program
     elif isinstance(program, float):
         return program
     elif program[0] == 'quote':
-        return lispString(program[1])
+        return lispStringUnchanged(program[1]) + "'"
     elif program[0] == 'define':
         name = program[1]
         value = eval(program[2], funcs)
@@ -117,14 +136,19 @@ def eval(program, funcs=functions):
         return Lambda(args, expression, funcs)
     elif program[0] == 'cond':
         clauses = program[1]
-        for clause in clauses[::-1]:
+        for clause in clauses:
             if clause[-1] == 'else':
-                return clause[0]
+                if not isinstance(clause[0], Symbol):
+                    return eval(clause[0], funcs)
+                else:
+                    return clause[0]
             else:
                 if eval(clause[1], funcs):
                     return clause[0]
     elif isinstance(program, Symbol):
         return funcs[program]
+    elif isinstance(program, List):
+        return program
     elif not isinstance(program, list):
         return program
     else:
@@ -137,6 +161,7 @@ def main():
     while True:
         input_string = input('>>> ')
         input_string_parsed = parse(tokenize(input_string))
+        # print("parsed: ", input_string_parsed)
         if input_string_parsed is not None:
             value = eval(input_string_parsed)
             print("{0} #=> {1}".format(input_string, value))
